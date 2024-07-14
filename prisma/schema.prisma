@@ -13,8 +13,158 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User{
-  id        Int       @id @default(autoincrement())
-  email     String    @unique
-  password  String
+model User {
+  id          Int         @id @default(autoincrement())
+  email       String      @unique
+  password    String
+  name        String
+  imageURL    String?
+  phoneNum    String
+  role        Role        @default(CANDIDATE)
+  createdAt   DateTime    @default(now())
+  candidate   Candidate?
+  recruiter   Recruiter?
+}
+
+model Candidate {
+  id           Int          @id @default(autoincrement())
+  userId       Int          @unique
+  yoe          String
+  bio          String?
+  perWeb       String?
+  country      String
+  city         String
+  district     String
+  skills       CandidateSkill[]
+  user         User         @relation(fields: [userId], references: [id])
+  applications Application[]
+  experiences  Experience[]   
+}
+
+model Recruiter {
+  id         Int        @id @default(autoincrement())
+  userId     Int        @unique
+  user       User       @relation(fields: [userId], references: [id])
+  branchId   Int
+  branch     Branch     @relation(fields: [branchId], references: [id])
+  jobs       Job[]
+}
+
+model Job {
+  id          Int                 @id @default(autoincrement())
+  title       String
+  description String
+  address     String
+  country     String
+  city        String
+  salary      Float?
+  position    PositionType        @default(Senior)
+  minYOE      Int
+  jobType     JobType             @default(Onsite)
+  timeType    TimeType            @default(FullTime)
+  skills        JobSkill[]
+  applications  Application[]
+  recruiterId   Int
+  recruiter     Recruiter           @relation(fields: [recruiterId], references: [id])
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  imageURL      String?
+}
+
+model Application {
+  id          Int                 @id @default(autoincrement())
+  jobId       Int
+  job         Job                 @relation(fields: [jobId], references: [id])
+  candidateId Int
+  candidate   Candidate           @relation(fields: [candidateId], references: [id])
+  status      ApplicationStatus   @default(Pending)
+  createdAt   DateTime            @default(now())
+}
+
+model Company {
+  id          Int               @id @default(autoincrement())
+  name        String            @unique
+  description String
+  phone       String
+  email       String
+  createdAt   DateTime          @default(now())
+  branches    Branch[]
+}
+
+model Branch {
+  id          Int               @id @default(autoincrement())
+  address     String
+  country     String
+  city        String
+  district    String?
+  companyId   Int
+  company     Company           @relation(fields: [companyId], references: [id])
+  recruiters  Recruiter[]
+  experiences Experience[]
+}
+
+model Skill {
+  id          Int               @id @default(autoincrement())
+  name        String            @unique
+  jobs        JobSkill[]
+  candidates  CandidateSkill[]
+  createdAt   DateTime          @default(now())
+}
+
+model Experience {
+  id           Int        @id @default(autoincrement())
+  candidateId  Int
+  candidate    Candidate  @relation(fields: [candidateId], references: [id])
+  title        String
+  branchId     Int
+  branch       Branch     @relation(fields: [branchId], references: [id])
+  startDate    DateTime
+  endDate      DateTime?
+  description  String
+  createdAt    DateTime   @default(now())
+}
+
+model JobSkill {
+  jobId       Int
+  skillId     Int
+  job         Job               @relation(fields: [jobId], references: [id])
+  skill       Skill             @relation(fields: [skillId], references: [id])
+  @@id([jobId, skillId])
+}
+
+model CandidateSkill {
+  candidateId   Int
+  skillId       Int
+  candidate     Candidate       @relation(fields: [candidateId], references: [id])
+  skill         Skill           @relation(fields: [skillId], references: [id])
+  @@id([candidateId, skillId])
+}
+
+enum Role {
+  CANDIDATE
+  RECRUITER
+  ADMIN
+}
+
+enum ApplicationStatus {
+  Pending
+  Accepted
+  Rejected
+}
+
+enum PositionType {
+  Senior
+  Junior
+  Fresher
+}
+
+enum JobType {
+  Onsite 
+  Remote
+  Hybrid
+}
+
+enum TimeType {
+  FullTime
+  PartTime
 }
