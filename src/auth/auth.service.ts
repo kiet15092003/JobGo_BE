@@ -1,15 +1,18 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/services/prisma.service';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
-import { Role, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { hash, compare } from 'bcrypt';
+import { UserService } from 'src/user/user.service';
+import { CreateCandidateDto } from 'src/user/dto/user.dto';
 
 
 @Injectable()
 export class AuthService {
     constructor(
         private prismaService: PrismaService,
+        private userService: UserService,
         private jwtService: JwtService,
     ) {}
 
@@ -30,6 +33,14 @@ export class AuthService {
             data: { ...userData, password: hashedPassword, role: userData.role }
         });
 
+        // Create candidate or recruiter and store 
+        if (userData.role === 0){
+            const newTempObj = new CreateCandidateDto();
+            newTempObj.userId = res.id;
+            const candiate = await this.userService.createCandidate(newTempObj);
+        } else {
+
+        }
         return res;
     };
 

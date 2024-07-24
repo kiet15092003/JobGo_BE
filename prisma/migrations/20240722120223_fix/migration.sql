@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `job` MODIFY `position` INTEGER NOT NULL DEFAULT 0;

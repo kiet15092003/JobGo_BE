@@ -14,157 +14,164 @@ datasource db {
 }
 
 model User {
-  id          Int         @id @default(autoincrement())
-  email       String      @unique
+  id          Int           @id @default(autoincrement())
+  email       String        @unique
   password    String
   name        String
   imageURL    String?
-  phoneNum    String
-  role        Role        @default(CANDIDATE)
-  createdAt   DateTime    @default(now())
+  imgBackURL  String?
+  phoneNum    String?
+
+  role        Int           @default(0) // 0 for candidate, 1 for recruiter, 2 for admin
   candidate   Candidate?
   recruiter   Recruiter?
+  address     Address?
+  experiences Experience[]
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt() @default(now())
 }
 
 model Candidate {
-  id           Int          @id @default(autoincrement())
-  userId       Int          @unique
-  yoe          String
+  id           Int               @id @default(autoincrement())
+  userId       Int               @unique
+  yoe          String?
   bio          String?
   perWeb       String?
-  country      String
-  city         String
-  district     String
+
   skills       CandidateSkill[]
-  user         User         @relation(fields: [userId], references: [id])
+  user         User             @relation(fields: [userId], references: [id])
   applications Application[]
-  experiences  Experience[]   
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt() @default(now())
 }
 
 model Recruiter {
-  id         Int        @id @default(autoincrement())
-  userId     Int        @unique
-  user       User       @relation(fields: [userId], references: [id])
-  branchId   Int
-  branch     Branch     @relation(fields: [branchId], references: [id])
-  jobs       Job[]
-}
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
 
-model Job {
-  id          Int                 @id @default(autoincrement())
-  title       String
-  description String
-  address     String
-  country     String
-  city        String
-  salary      Float?
-  position    PositionType        @default(Senior)
-  minYOE      Int
-  jobType     JobType             @default(Onsite)
-  timeType    TimeType            @default(FullTime)
-  skills        JobSkill[]
-  applications  Application[]
-  recruiterId   Int
-  recruiter     Recruiter           @relation(fields: [recruiterId], references: [id])
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
-  imageURL      String?
-}
+  user      User    @relation(fields: [userId], references: [id])
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id])
+  jobs      Job[]
 
-model Application {
-  id          Int                 @id @default(autoincrement())
-  jobId       Int
-  job         Job                 @relation(fields: [jobId], references: [id])
-  candidateId Int
-  candidate   Candidate           @relation(fields: [candidateId], references: [id])
-  status      ApplicationStatus   @default(Pending)
-  createdAt   DateTime            @default(now())
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt() @default(now())
 }
 
 model Company {
-  id          Int               @id @default(autoincrement())
-  name        String            @unique
+  id          Int           @id @default(autoincrement())
+  name        String        @unique()
   description String
-  phone       String
-  email       String
-  createdAt   DateTime          @default(now())
-  branches    Branch[]
+  websiteURL  String
+  imageURL    String?
+  imgBackURL  String?
+
+  recruiters  Recruiter[]
+  expriences  Experience[]
+  address     Address[]      
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt() @default(now())
 }
 
-model Branch {
-  id          Int               @id @default(autoincrement())
-  address     String
-  country     String
-  city        String
-  district    String?
-  companyId   Int
-  company     Company           @relation(fields: [companyId], references: [id])
-  recruiters  Recruiter[]
-  experiences Experience[]
+model Address {
+  id       Int     @id @default(autoincrement())
+  country  String
+  city     String
+  district String
+  name     String
+
+  userId   Int?     @unique
+  user     User?   @relation(fields: [userId], references: [id])
+
+  copmpanyId   Int?     
+  copmpany     Company?   @relation(fields: [copmpanyId], references: [id])
+
+  jobs  Job[]
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt() @default(now())
+}
+
+
+model Job {
+  id           Int            @id @default(autoincrement())
+  title        String
+  description  String
+  salary       String
+  minYOE       Int
+
+  position     Int            @default(0)  // 0  for fresher, 1 for junior, 2 for senior 
+  jobType      Int            @default(0)  // 0  for onsite, 1 for remote, 2 for hyprid
+  timeType     Int            @default(1)  // 0 for parttime, 1 for fulltime
+
+  addressId    Int
+  address      Address        @relation(fields: [addressId], references: [id])
+
+  skills       JobSkill[]
+  applications Application[]
+  recruiterId  Int
+  recruiter    Recruiter      @relation(fields: [recruiterId], references: [id])
+
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt() @default(now())
+}
+
+model Application {
+  id          Int                @id @default(autoincrement())
+
+  jobId       Int
+  job         Job               @relation(fields: [jobId], references: [id])
+  candidateId Int
+  candidate   Candidate         @relation(fields: [candidateId], references: [id])
+  status      Int               @default(0) // 0  for pending, 1 for accpeted, 2 for rejected
+
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt() @default(now())
 }
 
 model Skill {
-  id          Int               @id @default(autoincrement())
-  name        String            @unique
-  jobs        JobSkill[]
-  candidates  CandidateSkill[]
-  createdAt   DateTime          @default(now())
+  id         Int               @id @default(autoincrement())
+  name       String            @unique
+
+  jobs       JobSkill[]
+  candidates CandidateSkill[]
+
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt() @default(now())
 }
 
 model Experience {
-  id           Int        @id @default(autoincrement())
-  candidateId  Int
-  candidate    Candidate  @relation(fields: [candidateId], references: [id])
-  title        String
-  branchId     Int
-  branch       Branch     @relation(fields: [branchId], references: [id])
-  startDate    DateTime
-  endDate      DateTime?
-  description  String
-  createdAt    DateTime   @default(now())
+  id          Int        @id @default(autoincrement())
+  title       String
+  startDate   DateTime
+  endDate     DateTime?
+  description String
+
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id])
+
+  companyId   Int
+  company     Company   @relation(fields: [companyId], references: [id])
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt() @default(now())
 }
 
 model JobSkill {
-  jobId       Int
-  skillId     Int
-  job         Job               @relation(fields: [jobId], references: [id])
-  skill       Skill             @relation(fields: [skillId], references: [id])
+  jobId   Int
+  skillId Int
+  job     Job   @relation(fields: [jobId], references: [id])
+  skill   Skill @relation(fields: [skillId], references: [id])
   @@id([jobId, skillId])
 }
 
 model CandidateSkill {
-  candidateId   Int
-  skillId       Int
-  candidate     Candidate       @relation(fields: [candidateId], references: [id])
-  skill         Skill           @relation(fields: [skillId], references: [id])
+  candidateId Int
+  skillId     Int
+  candidate   Candidate @relation(fields: [candidateId], references: [id])
+  skill       Skill     @relation(fields: [skillId], references: [id])
   @@id([candidateId, skillId])
-}
-
-enum Role {
-  CANDIDATE
-  RECRUITER
-  ADMIN
-}
-
-enum ApplicationStatus {
-  Pending
-  Accepted
-  Rejected
-}
-
-enum PositionType {
-  Senior
-  Junior
-  Fresher
-}
-
-enum JobType {
-  Onsite 
-  Remote
-  Hybrid
-}
-
-enum TimeType {
-  FullTime
-  PartTime
 }
